@@ -29,8 +29,8 @@ class myNeuralNetwork(object):
         self.a1 = np.zeros(n_layer1)
         self.a2= np.zeros(n_layer2)
         self.a1_grad = np.zeros_like(self.a1)
-        self.a2grad = np.zeros_like(self.a2)
-        self.a3grad = np.zeros(n_out)
+        self.a2_grad = np.zeros_like(self.a2)
+        self.a3_grad = np.zeros(n_out)
 
     def forward_propagation(self, x):
         '''forward_propagation
@@ -45,8 +45,8 @@ class myNeuralNetwork(object):
         '''
         x = self.sigmoid(self.w1.T @ x)
         x = self.sigmoid(self.w2.T @ x)
-        x = np.exp(self.w3.T @ x)
-        return x / sum(x)
+        x = self.sigmoid(self.w3.T @ x)
+        return x
     
     def compute_loss(self, X, y):
         '''compute_loss
@@ -85,12 +85,14 @@ class myNeuralNetwork(object):
                 loss: a scalar measure of th loss/cost associated with x,y
                       and the current model weights
         '''
-        y_hat = self.forward_propagation(x)
-        y1 = np.zeros(y.shape[0])
-        y1[y] = 1.
-        self.a3grad = y_hat - y1
-
-
+        a1 = self.sigmoid(self.w1.T @ x)
+        a2 = self.sigmoid(self.w2.T @ a1)
+        y_hat = self.sigmoid(self.w3.T @ a2)
+        #L = - y*np.log(y_hat) - (1-y)*np.log(1-y_hat)
+        self.a3_grad = (1-y)/(1-y_hat) - y/y_hat
+        self.a2_grad = self.a3_grad * self.sigmoid_derivative(self.w3.T @ a2) * self.w3
+        self.w3_grad = self.a3_grad * self.sigmoid_derivative(self.w3.T @ a2) * a2
+        
 
     def stochastic_gradient_descent_step(self):
         '''stochastic_gradient_descent_step [OPTIONAL - you may also do this
